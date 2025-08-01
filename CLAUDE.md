@@ -1,7 +1,7 @@
 # zkorp-mobile-web2-playground
 
 ## Project Overview
-React Native app using Expo SDK 53 with planned web3 authentication integration.
+React Native app using Expo SDK 53 with Supabase authentication and CRUD functionality. Features a hybrid architecture with public pages and protected authenticated features.
 
 ## Development Philosophy
 - **Keep Things Simple**: Avoid over-engineering. Choose the simplest solution that works effectively.
@@ -77,6 +77,36 @@ eas env:pull
 - **Navigation**: expo-router v5.1.4 (file-based routing)
 - **Build**: Npm package manager
 - **TypeScript**: v5.8.3
+- **Backend**: Supabase (auth + database)
+- **State Management**: Zustand v5.0.7
+- **Forms**: React Hook Form + Zod validation
+- **Security**: expo-secure-store, expo-local-authentication
+
+## Supabase Integration
+
+### Authentication Features
+- Email/password authentication
+- Biometric authentication (when available)
+- Session management with secure storage
+- Real-time auth state synchronization
+
+### Database Schema
+- **notes** table with Row Level Security (RLS)
+- User-based data isolation
+- Optimistic updates with rollback
+- Real-time subscriptions for live sync
+
+### Security Implementation
+- AES encryption for session storage
+- Expo SecureStore for encryption keys
+- Environment variables for API keys
+- RLS policies for data protection
+
+### Setup Instructions
+1. Follow `SUPABASE_SETUP.md` for complete configuration
+2. Copy `.env.example` to `.env` and add your Supabase credentials
+3. Run the SQL schema in your Supabase dashboard
+4. Configure RLS policies for security
 
 ## Essential Configuration
 
@@ -101,13 +131,40 @@ npm run reset-project  # Reset to blank project
 ```
 
 ## Project Structure
-- `/app` - Expo Router screens (file-based routing)
-- `/components` - Reusable components
-- `/hooks` - Custom React hooks
-- `/constants` - App constants (Colors.ts)
-- `/assets` - Images, fonts, and other static assets
-- `app.json` - Expo configuration
-- `eas.json` - EAS Build/Submit configuration (create when needed)
+```
+/app
+├── _layout.tsx                 # Root layout with auth initialization
+├── (tabs)/                     # Public tabs (accessible without auth)
+│   ├── _layout.tsx            # Tab navigation layout
+│   ├── index.tsx              # Home screen (public)
+│   ├── about.tsx              # About screen (public)
+│   ├── notes.tsx              # Notes screen (protected with AuthGuard)
+│   └── profile.tsx            # Profile/Login screen (adaptive)
+├── (auth)/                     # Authentication screens
+│   ├── _layout.tsx            # Auth layout
+│   ├── sign-in.tsx            # Sign in form
+│   └── sign-up.tsx            # Sign up form
+└── (protected)/                # Protected routes (require auth)
+    ├── _layout.tsx            # Protected layout with auth check
+    ├── (tabs)/                # Protected tabs (if needed)
+    └── notes/[id].tsx         # Note detail/edit screen
+
+/lib
+└── supabase.ts                # Supabase client configuration
+
+/stores
+├── authStore.ts               # Authentication state (Zustand)
+├── notesStore.ts              # Notes CRUD state (Zustand)
+└── uiStore.ts                 # UI state (modals, toasts, etc.)
+
+/components
+├── AuthGuard.tsx              # Authentication protection component
+└── Toast.tsx                  # Toast notification system
+
+/assets                        # Images, fonts, and other static assets
+.env.example                   # Environment variables template
+SUPABASE_SETUP.md             # Supabase configuration guide
+```
 
 ## Important Notes
 - Uses Expo Router for navigation (file-based routing with typed routes enabled)
@@ -116,9 +173,22 @@ npm run reset-project  # Reset to blank project
 
 ## Development Workflow
 1. Run `npm install` to install dependencies
-2. Configure app identifiers in `app.json` for your project
-3. Use `npm start` for Expo Go or `npm run ios`/`npm run android` for simulators
-4. For web3 integration, install and configure authentication provider
+2. Configure Supabase:
+   - Follow `SUPABASE_SETUP.md` for complete setup
+   - Copy `.env.example` to `.env` and add your credentials
+   - Run the SQL schema in Supabase dashboard
+3. Configure app identifiers in `app.json` for your project
+4. Use `npm start` for Expo Go or `npm run ios`/`npm run android` for simulators
+5. Test authentication and CRUD functionality
+
+## Architecture Features
+- **Hybrid Access**: Public pages (Home, About) + Protected features (Notes)
+- **Smart Navigation**: Dynamic tab labels and badges based on auth state
+- **Optimistic Updates**: Instant UI feedback with automatic rollback on errors
+- **Real-time Sync**: Live updates across devices using Supabase subscriptions
+- **Secure Storage**: Encrypted session management with device keychain
+- **Form Validation**: TypeScript-first validation with Zod schemas
+- **Error Handling**: Graceful error boundaries with user-friendly messages
 
 ## Best Practices
 - Use absolute imports with `@/` prefix when configured
