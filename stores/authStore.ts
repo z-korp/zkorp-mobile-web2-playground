@@ -122,11 +122,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
-    console.log('signOut function called');
     set({ loading: true });
     
     try {
-      console.log('Calling supabase.auth.signOut()...');
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
@@ -136,7 +134,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return;
       }
 
-      console.log('Supabase signOut successful, clearing state...');
       // Clear all auth state
       set({ 
         session: null, 
@@ -145,7 +142,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         error: null,
         biometricEnabled: false
       });
-      console.log('Auth state cleared successfully');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred';
       console.error('signOut catch error:', error);
@@ -420,8 +416,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       // Generate a random nonce for security
       const nonce = Math.random().toString(36).substring(2, 15);
-      console.log('DEBUG: Generated raw nonce:', nonce);
-      console.log('DEBUG: Raw nonce length:', nonce.length);
       
       // Hash the nonce for Apple Authentication (using HEX encoding)
       const hashedNonce = await Crypto.digestStringAsync(
@@ -429,11 +423,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         nonce,
         { encoding: Crypto.CryptoEncoding.HEX }
       );
-      console.log('DEBUG: Hashed nonce for Apple (HEX):', hashedNonce);
-      console.log('DEBUG: Hashed nonce length:', hashedNonce.length);
 
       // Request Apple authentication with hashed nonce
-      console.log('Requesting Apple authentication with hashed nonce...');
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -442,31 +433,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         nonce: hashedNonce,
       });
 
-      console.log('Apple credential received:', {
-        user: credential.user,
-        email: credential.email,
-        fullName: credential.fullName,
-        hasIdentityToken: !!credential.identityToken,
-        identityTokenLength: credential.identityToken?.length,
-      });
-
-      // Decode the identity token to inspect the nonce claim
-      if (credential.identityToken) {
-        try {
-          const parts = credential.identityToken.split('.');
-          if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1]));
-            console.log('DEBUG: Identity token payload nonce:', payload.nonce);
-            console.log('DEBUG: Identity token payload nonce_supported:', payload.nonce_supported);
-          }
-        } catch (e) {
-          console.log('DEBUG: Could not decode identity token:', e);
-        }
-      }
-
       // Sign in with Supabase using the Apple ID token
-      console.log('DEBUG: Sending to Supabase - raw nonce:', nonce);
-      console.log('Signing in with Supabase...');
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken!,

@@ -21,10 +21,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
-      console.log('Deep link received:', url);
-      
       const parsed = Linking.parse(url);
-      console.log('Parsed URL:', parsed);
       
       // Handle authentication callbacks (magic link and OAuth)
       if (parsed.hostname === 'auth' && parsed.path === '/callback') {
