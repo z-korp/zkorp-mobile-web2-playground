@@ -1,14 +1,14 @@
 import { Link } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, SafeAreaView } from 'react-native';
 
 export default function Index() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.text}>Home screen</Text>
       <Link href="/about" style={styles.button}>
         Go to About screen
       </Link>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -21,29 +22,50 @@ const signInSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const magicLinkSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+
 type SignInForm = z.infer<typeof signInSchema>;
+type MagicLinkForm = z.infer<typeof magicLinkSchema>;
 
 export default function SignInScreen() {
-  const { signIn, loading, error, biometricAvailable, authenticateWithBiometric } = useAuthStore();
+  const { signIn, signInWithMagicLink, loading, magicLinkLoading, error, biometricAvailable, authenticateWithBiometric } = useAuthStore();
   const { showToast } = useUIStore();
+  const [authMode, setAuthMode] = useState<'password' | 'magiclink'>('password');
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<SignInForm>({
+  const passwordForm = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
     mode: 'onChange',
   });
 
-  const onSubmit = async (data: SignInForm) => {
+  const magicLinkForm = useForm<MagicLinkForm>({
+    resolver: zodResolver(magicLinkSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+    },
+  });
+
+  const onPasswordSubmit = async (data: SignInForm) => {
     const { error } = await signIn(data.email, data.password);
     
     if (error) {
       showToast(error.message, 'error');
     } else {
       showToast('Welcome back!', 'success');
-      router.replace('/(protected)/(tabs)/home');
+      router.replace('/(tabs)');
+    }
+  };
+
+  const onMagicLinkSubmit = async (data: MagicLinkForm) => {
+    const { error } = await signInWithMagicLink(data.email);
+    
+    if (error) {
+      showToast(error.message, 'error');
+    } else {
+      showToast('Magic link sent! Check your email.', 'success');
+      router.push('/(auth)/magic-link-sent');
     }
   };
 
@@ -51,83 +73,169 @@ export default function SignInScreen() {
     const success = await authenticateWithBiometric();
     if (success) {
       showToast('Signed in successfully!', 'success');
-      router.replace('/(protected)/(tabs)/home');
+      router.replace('/(tabs)');
     } else {
       showToast('Biometric authentication failed', 'error');
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                  />
-                )}
-              />
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email.message}</Text>
-              )}
+            <View style={styles.authModeTabs}>
+              <TouchableOpacity
+                style={[styles.authModeTab, authMode === 'password' && styles.authModeTabActive]}
+                onPress={() => setAuthMode('password')}
+              >
+                <Text style={[styles.authModeTabText, authMode === 'password' && styles.authModeTabTextActive]}>
+                  Password
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.authModeTab, authMode === 'magiclink' && styles.authModeTabActive]}
+                onPress={() => setAuthMode('magiclink')}
+              >
+                <Text style={[styles.authModeTabText, authMode === 'magiclink' && styles.authModeTabTextActive]}>
+                  Passwordless
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.password && styles.inputError]}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry
-                    autoComplete="password"
+            {authMode === 'password' ? (
+              <>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email</Text>
+                  <Controller
+                    control={passwordForm.control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[styles.input, passwordForm.formState.errors.email && styles.inputError]}
+                        placeholder="Enter your email"
+                        placeholderTextColor="#666"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                      />
+                    )}
                   />
-                )}
-              />
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password.message}</Text>
-              )}
-            </View>
+                  {passwordForm.formState.errors.email && (
+                    <Text style={styles.errorText}>{passwordForm.formState.errors.email.message}</Text>
+                  )}
+                </View>
 
-            {error && (
-              <Text style={styles.errorText}>{error}</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <Controller
+                    control={passwordForm.control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[styles.input, passwordForm.formState.errors.password && styles.inputError]}
+                        placeholder="Enter your password"
+                        placeholderTextColor="#666"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secureTextEntry
+                        autoComplete="password"
+                      />
+                    )}
+                  />
+                  {passwordForm.formState.errors.password && (
+                    <Text style={styles.errorText}>{passwordForm.formState.errors.password.message}</Text>
+                  )}
+                </View>
+
+                {error && (
+                  <Text style={styles.errorText}>{error}</Text>
+                )}
+
+                <TouchableOpacity
+                  style={[styles.button, (!passwordForm.formState.isValid || loading) && styles.buttonDisabled]}
+                  onPress={passwordForm.handleSubmit(onPasswordSubmit)}
+                  disabled={!passwordForm.formState.isValid || loading}
+                >
+                  <Text style={styles.buttonText}>
+                    {loading ? 'Signing In...' : 'Sign In'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.forgotPasswordButton}
+                  onPress={() => setAuthMode('magiclink')}
+                >
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot Password?
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email</Text>
+                  <Controller
+                    control={magicLinkForm.control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[styles.input, magicLinkForm.formState.errors.email && styles.inputError]}
+                        placeholder="Enter your email"
+                        placeholderTextColor="#666"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                      />
+                    )}
+                  />
+                  {magicLinkForm.formState.errors.email && (
+                    <Text style={styles.errorText}>{magicLinkForm.formState.errors.email.message}</Text>
+                  )}
+                </View>
+
+                <Text style={styles.magicLinkDescription}>
+                  We&apos;ll email you a verification code to sign in without a password.
+                </Text>
+
+                {error && (
+                  <Text style={styles.errorText}>{error}</Text>
+                )}
+
+                <TouchableOpacity
+                  style={[styles.button, (!magicLinkForm.watch('email') || magicLinkForm.formState.errors.email || magicLinkLoading) && styles.buttonDisabled]}
+                  onPress={magicLinkForm.handleSubmit(onMagicLinkSubmit)}
+                  disabled={!magicLinkForm.watch('email') || !!magicLinkForm.formState.errors.email || magicLinkLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {magicLinkLoading ? 'Sending Code...' : 'Send Verification Code'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.verifyCodeButton}
+                  onPress={() => router.push('/(auth)/verify-otp')}
+                >
+                  <Text style={styles.verifyCodeButtonText}>
+                    Have a verification code?
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
-
-            <TouchableOpacity
-              style={[styles.button, (!isValid || loading) && styles.buttonDisabled]}
-              onPress={handleSubmit(onSubmit)}
-              disabled={!isValid || loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
 
             {biometricAvailable && (
               <TouchableOpacity
@@ -153,6 +261,7 @@ export default function SignInScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -248,6 +357,56 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   link: {
+    color: '#ffd33d',
+    fontWeight: '500',
+  },
+  authModeTabs: {
+    flexDirection: 'row',
+    marginBottom: 30,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 4,
+  },
+  authModeTab: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  authModeTabActive: {
+    backgroundColor: '#ffd33d',
+  },
+  authModeTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#999',
+  },
+  authModeTabTextActive: {
+    color: '#25292e',
+  },
+  magicLinkDescription: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 20,
+    marginTop: -10,
+  },
+  verifyCodeButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  verifyCodeButtonText: {
+    fontSize: 14,
+    color: '#ffd33d',
+    fontWeight: '500',
+  },
+  forgotPasswordButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    fontSize: 14,
     color: '#ffd33d',
     fontWeight: '500',
   },

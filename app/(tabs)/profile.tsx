@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -54,18 +55,19 @@ function AuthenticatedProfile() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={48} color="#ffd33d" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.content}>
+          {/* Profile Header */}
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Ionicons name="person" size={48} color="#ffd33d" />
+            </View>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+            <Text style={styles.joinDate}>
+              Member since {user?.created_at ? formatDate(user.created_at) : 'Unknown'}
+            </Text>
           </View>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-          <Text style={styles.joinDate}>
-            Member since {user?.created_at ? formatDate(user.created_at) : 'Unknown'}
-          </Text>
-        </View>
 
         {/* Account Settings */}
         <View style={styles.section}>
@@ -137,45 +139,26 @@ function AuthenticatedProfile() {
           </TouchableOpacity>
         </View>
 
-        {/* Sign Out */}
-        <TouchableOpacity 
-          style={styles.signOutButton} 
-          onPress={handleSignOut}
-          disabled={loading}
-        >
-          <Ionicons name="log-out-outline" size={24} color="#ff4444" />
-          <Text style={styles.signOutText}>
-            {loading ? 'Signing Out...' : 'Sign Out'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Debug: Direct sign out button */}
-        <TouchableOpacity 
-          style={[styles.signOutButton, { marginTop: 10, borderColor: '#ffd33d' }]} 
-          onPress={async () => {
-            console.log('Direct sign out pressed');
-            try {
-              await signOut();
-              console.log('Direct sign out completed');
-            } catch (error) {
-              console.error('Direct sign out error:', error);
-            }
-          }}
-          disabled={loading}
-        >
-          <Ionicons name="bug-outline" size={24} color="#ffd33d" />
-          <Text style={[styles.signOutText, { color: '#ffd33d' }]}>
-            Debug Sign Out
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/* Sign Out */}
+          <TouchableOpacity 
+            style={styles.signOutButton} 
+            onPress={handleSignOut}
+            disabled={loading}
+          >
+            <Ionicons name="log-out-outline" size={24} color="#ff4444" />
+            <Text style={styles.signOutText}>
+              {loading ? 'Signing Out...' : 'Sign Out'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 function UnauthenticatedProfile() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.authContainer}>
         <View style={styles.authHeader}>
           <Ionicons name="person-circle-outline" size={80} color="#ffd33d" />
@@ -227,7 +210,7 @@ function UnauthenticatedProfile() {
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

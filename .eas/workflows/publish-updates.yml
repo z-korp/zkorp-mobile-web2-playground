@@ -1,0 +1,13 @@
+name: Publish Updates
+
+on:
+  push:
+    branches: ['*']
+
+jobs:
+  update:
+    name: Publish update
+    type: update
+    params:
+      branch: ${{ github.ref_name || 'preview' }}
+      message: "Update from branch: ${{ github.ref_name }}"

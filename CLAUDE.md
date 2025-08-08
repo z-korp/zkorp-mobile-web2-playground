@@ -81,6 +81,7 @@ eas env:pull
 - **State Management**: Zustand v5.0.7
 - **Forms**: React Hook Form + Zod validation
 - **Security**: expo-secure-store, expo-local-authentication
+- **Development**: expo-dev-client (required for development builds)
 
 ## Supabase Integration
 
@@ -122,12 +123,23 @@ eas env:pull
 ## Commands
 ```bash
 npm install      # Install dependencies
-npm start        # Start Expo Go dev server
+npm start        # Start Expo Go dev server (limited features)
+npx expo start --dev-client  # Start dev server for development builds
 npm run ios      # Run on iOS simulator
 npm run android  # Run on Android emulator
 npm run web      # Run in web browser
 npm run lint     # Run ESLint
 npm run reset-project  # Reset to blank project
+
+# EAS Build commands (development builds with native modules)
+npm run build:android      # Build Android APK for device
+npm run build:ios          # Build iOS app for device
+npm run build:ios-simulator # Build iOS app for simulator
+
+# Or use EAS CLI directly:
+eas build -p android --profile development      # Android device build
+eas build -p ios --profile development          # iOS device build  
+eas build -p ios --profile development-simulator # iOS simulator build
 ```
 
 ## Project Structure
@@ -196,3 +208,4 @@ SUPABASE_SETUP.md             # Supabase configuration guide
 - Test on both iOS and Android regularly
 - Use EAS Update for quick fixes without app store review
 - Keep native dependencies minimal for easier maintenance
+- **Always respect safe areas**: Let React Navigation and React Native handle safe area insets automatically. Avoid fixed heights on navigation bars and tab bars that might overlap with device safe areas (notches, rounded corners, home indicators)
