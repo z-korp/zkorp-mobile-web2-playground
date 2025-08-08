@@ -1,9 +1,11 @@
+import CubeScene from '@/components/CubeScene';
 import { Link } from 'expo-router';
-import { StyleSheet, Text, SafeAreaView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
 
 export default function Index() {
   return (
     <SafeAreaView style={styles.container}>
+      <CubeScene />
       <Text style={styles.text}>Home screen</Text>
       <Link href="/about" style={styles.button}>
         Go to About screen
@@ -19,8 +21,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  title: {
+    color: '#fff',
+    fontSize: 24,
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
   text: {
     color: '#fff',
+    marginTop: 20,
   },
   button: {
     fontSize: 20,
