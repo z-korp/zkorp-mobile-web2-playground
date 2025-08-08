@@ -25,6 +25,9 @@ interface AuthActions {
   initialize: () => Promise<void>;
   setError: (error: string | null) => void;
   clearError: () => void;
+  // Helper functions for testing/stories
+  setSession: (session: Session | null) => void;
+  setInitializing: (initializing: boolean) => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -261,5 +264,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  // Helper functions for testing/stories
+  setSession: (session: Session | null) => {
+    set({ 
+      session, 
+      user: session?.user || null,
+      initializing: false 
+    });
+  },
+
+  setInitializing: (initializing: boolean) => {
+    set({ initializing });
   },
 }));
