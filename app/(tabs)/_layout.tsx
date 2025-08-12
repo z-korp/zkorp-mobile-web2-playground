@@ -74,6 +74,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="location"
+        options={{
+          title: 'Location',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'location' : 'location-outline'}
+              color={color}
+              size={22}
+            />
+          ),
+          href: '/(tabs)/location',
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: session ? 'Profile' : 'Login',
