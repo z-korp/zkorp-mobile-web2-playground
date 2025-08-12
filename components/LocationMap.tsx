@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Linking } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { StyleSheet, View, Text, TouchableOpacity, Linking, Platform } from 'react-native';
+import * as ExpoMaps from 'expo-maps';
 import * as Location from 'expo-location';
 
 interface LocationMapProps {
@@ -11,7 +11,7 @@ interface LocationMapProps {
 
 export function LocationMap({ location, followUser = true }: LocationMapProps) {
   const [showInfo, setShowInfo] = useState(false);
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
   
   const openInMaps = () => {
     if (location) {
@@ -23,12 +23,8 @@ export function LocationMap({ location, followUser = true }: LocationMapProps) {
 
   useEffect(() => {
     if (location && followUser && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }, 1000);
+      // TODO: Implement camera animation for expo-maps
+      // mapRef.current.animateToRegion(...);
     }
   }, [location, followUser]);
 
@@ -55,30 +51,68 @@ export function LocationMap({ location, followUser = true }: LocationMapProps) {
     );
   }
 
+  const renderMap = () => {
+    if (Platform.OS === 'ios') {
+      return (
+        <ExpoMaps.AppleMaps.View
+          ref={mapRef}
+          style={styles.fullscreenMap}
+          initialCameraPosition={{
+            center: {
+              latitude: initialRegion.latitude,
+              longitude: initialRegion.longitude,
+            },
+            zoom: 15,
+          }}
+          showsUserLocation={true}
+          markers={location ? [{
+            id: 'user-location',
+            coordinates: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            },
+            title: 'Your Location',
+            tintColor: '#FF0000'
+          }] : []}
+        />
+      );
+    } else if (Platform.OS === 'android') {
+      return (
+        <ExpoMaps.GoogleMaps.View
+          ref={mapRef}
+          style={styles.fullscreenMap}
+          initialCameraPosition={{
+            target: {
+              latitude: initialRegion.latitude,
+              longitude: initialRegion.longitude,
+            },
+            zoom: 15,
+          }}
+          showsUserLocation={true}
+          markers={location ? [{
+            id: 'user-location',
+            coordinate: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            },
+            title: 'Your Location',
+            snippet: `Accuracy: ±${location.coords.accuracy?.toFixed(0)}m`
+          }] : []}
+        />
+      );
+    } else {
+      return (
+        <View style={styles.fullscreenMap}>
+          <Text style={styles.webMessage}>Maps are only available on iOS and Android</Text>
+        </View>
+      );
+    }
+  };
+
   return (
     <View style={styles.fullscreenContainer}>
       {/* Fullscreen Native Map */}
-      <MapView
-        ref={mapRef}
-        style={styles.fullscreenMap}
-        initialRegion={initialRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
-        showsCompass={true}
-        mapType="standard"
-      >
-        {location && (
-          <Marker
-            coordinate={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            }}
-            title="Your Location"
-            description={`Accuracy: ±${location.coords.accuracy?.toFixed(0)}m`}
-            pinColor="red"
-          />
-        )}
-      </MapView>
+      {renderMap()}
       
       {/* Info Button Overlay */}
       <TouchableOpacity 
@@ -257,5 +291,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  webMessage: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 50,
   },
 });
