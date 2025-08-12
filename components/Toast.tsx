@@ -1,14 +1,21 @@
 import React, { useEffect } from 'react';
-import {
-  View,
+import { Animated } from 'react-native';
+import { 
+  Box,
   Text,
-  StyleSheet,
-  Animated,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+  VStack,
+  HStack,
+  Pressable,
+  Alert,
+  AlertIcon,
+  AlertText,
+  AlertCircleIcon,
+  CheckCircleIcon,
+  InfoIcon,
+  WarningIcon,
+  CloseIcon
+} from '@gluestack-ui/themed';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useUIStore } from '@/stores/uiStore';
 
 export default function Toast() {
@@ -18,15 +25,23 @@ export default function Toast() {
   if (toasts.length === 0) return null;
 
   return (
-    <View style={[styles.container, { top: insets.top }]}>
-      {toasts.map((toast) => (
-        <ToastItem
-          key={toast.id}
-          toast={toast}
-          onDismiss={() => hideToast(toast.id)}
-        />
-      ))}
-    </View>
+    <Box 
+      position="absolute" 
+      top={insets.top + 20} 
+      left="$4" 
+      right="$4" 
+      zIndex={9999}
+    >
+      <VStack space="sm">
+        {toasts.map((toast) => (
+          <ToastItem
+            key={toast.id}
+            toast={toast}
+            onDismiss={() => hideToast(toast.id)}
+          />
+        ))}
+      </VStack>
+    </Box>
   );
 }
 
@@ -59,10 +74,10 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     ]).start(() => {
       onDismiss();
     });
-  }, [opacity, translateY, onDismiss]);
+  }, [onDismiss, opacity, translateY]);
 
   useEffect(() => {
-    // Animate in
+    // Animation d'entrée
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
@@ -76,7 +91,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       }),
     ]).start();
 
-    // Auto dismiss if duration is set
+    // Auto-dismiss après duration
     if (toast.duration && toast.duration > 0) {
       const timer = setTimeout(() => {
         animateOut();
@@ -84,132 +99,62 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 
       return () => clearTimeout(timer);
     }
-  }, [opacity, translateY, toast.duration, animateOut]);
+  }, [toast.duration, animateOut, opacity, translateY]);
 
-  const getToastStyle = () => {
+  const getActionType = () => {
     switch (toast.type) {
       case 'success':
-        return styles.successToast;
+        return 'success';
       case 'error':
-        return styles.errorToast;
+        return 'error';
       case 'warning':
-        return styles.warningToast;
+        return 'warning';
+      case 'info':
       default:
-        return styles.infoToast;
+        return 'info';
     }
   };
 
   const getIcon = () => {
     switch (toast.type) {
       case 'success':
-        return 'checkmark-circle';
+        return CheckCircleIcon;
       case 'error':
-        return 'alert-circle';
+        return AlertCircleIcon;
       case 'warning':
-        return 'warning';
+        return WarningIcon;
+      case 'info':
       default:
-        return 'information-circle';
-    }
-  };
-
-  const getIconColor = () => {
-    switch (toast.type) {
-      case 'success':
-        return '#4CAF50';
-      case 'error':
-        return '#ff4444';
-      case 'warning':
-        return '#FF9800';
-      default:
-        return '#2196F3';
+        return InfoIcon;
     }
   };
 
   return (
     <Animated.View
-      style={[
-        styles.toast,
-        getToastStyle(),
-        {
-          opacity,
-          transform: [{ translateY }],
-        },
-      ]}
+      style={{
+        opacity: opacity,
+        transform: [{ translateY: translateY }],
+      }}
     >
-      <View style={styles.toastContent}>
-        <Ionicons
-          name={getIcon()}
-          size={20}
-          color={getIconColor()}
-          style={styles.icon}
-        />
-        <Text style={styles.message} numberOfLines={3}>
-          {toast.message}
-        </Text>
-        <TouchableOpacity style={styles.closeButton} onPress={animateOut}>
-          <Ionicons name="close" size={18} color="#666" />
-        </TouchableOpacity>
-      </View>
+      <Alert 
+        action={getActionType()} 
+        variant="solid"
+        shadowColor="$black"
+        shadowOffset={{ width: 0, height: 2 }}
+        shadowOpacity={0.1}
+        shadowRadius={4}
+        elevation={5}
+      >
+        <AlertIcon as={getIcon()} />
+        <VStack flex={1}>
+          <AlertText fontWeight="$medium" numberOfLines={3}>
+            {toast.message}
+          </AlertText>
+        </VStack>
+        <Pressable onPress={animateOut} ml="$2">
+          <CloseIcon size="sm" />
+        </Pressable>
+      </Alert>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    paddingHorizontal: 16,
-  },
-  toast: {
-    borderRadius: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  toastContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  successToast: {
-    backgroundColor: '#333',
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-  },
-  errorToast: {
-    backgroundColor: '#333',
-    borderLeftWidth: 4,
-    borderLeftColor: '#ff4444',
-  },
-  warningToast: {
-    backgroundColor: '#333',
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF9800',
-  },
-  infoToast: {
-    backgroundColor: '#333',
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  icon: {
-    marginRight: 12,
-  },
-  message: {
-    flex: 1,
-    fontSize: 14,
-    color: '#fff',
-    lineHeight: 20,
-  },
-  closeButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-});

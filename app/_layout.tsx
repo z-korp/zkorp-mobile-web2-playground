@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { config } from '@gluestack-ui/config';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import Toast from '@/components/Toast';
@@ -24,10 +26,11 @@ export default function RootLayout() {
   }, [initializing]);
 
   return (
-    <>
+    <GluestackUIProvider config={config}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <Toast />
       <ConfirmDialog
@@ -47,6 +50,6 @@ export default function RootLayout() {
           hideConfirmDialog();
         }}
       />
-    </>
+    </GluestackUIProvider>
   );
 }
