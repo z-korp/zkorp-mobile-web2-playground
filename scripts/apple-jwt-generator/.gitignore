@@ -1,0 +1,19 @@
+# Apple Private Keys - NEVER commit these!
+*.p8
+AuthKey_*.p8
+
+# Generated JWT tokens
+*.jwt
+jwt.txt
+token.txt
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db

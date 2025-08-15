@@ -1,0 +1,13 @@
+{
+  "name": "apple-jwt-generator",
+  "version": "1.0.0",
+  "description": "Generate JWT tokens for Apple Sign-In with Supabase",
+  "type": "module",
+  "main": "generateAppleJWT.js",
+  "scripts": {
+    "generate": "node generateAppleJWT.js"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

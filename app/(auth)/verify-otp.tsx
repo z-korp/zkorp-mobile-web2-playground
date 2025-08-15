@@ -8,60 +8,67 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 
-const signUpSchema = z.object({
+const otpSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+  token: z.string().min(6, 'Verification code must be at least 6 characters'),
 });
 
-type SignUpForm = z.infer<typeof signUpSchema>;
+type OTPForm = z.infer<typeof otpSchema>;
 
-export default function SignUpScreen() {
-  const { signUp, loading, error } = useAuthStore();
+export default function VerifyOTPScreen() {
+  const { verifyOtp, lastMagicLinkEmail, otpVerificationLoading, error } = useAuthStore();
   const { showToast } = useUIStore();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<SignUpForm>({
-    resolver: zodResolver(signUpSchema),
+  } = useForm<OTPForm>({
+    resolver: zodResolver(otpSchema),
     mode: 'onChange',
+    defaultValues: {
+      email: lastMagicLinkEmail || '',
+    },
   });
 
-  const onSubmit = async (data: SignUpForm) => {
-    const { error } = await signUp(data.email, data.password);
+  const onSubmit = async (data: OTPForm) => {
+    const { error } = await verifyOtp(data.email, data.token);
     
     if (error) {
       showToast(error.message, 'error');
     } else {
-      showToast('Account created successfully! Please check your email to verify your account.', 'success');
+      showToast('Successfully signed in!', 'success');
       router.replace('/(tabs)');
     }
   };
 
+  const handleBackToSignIn = () => {
+    router.replace('/(auth)/sign-in');
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.container} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>🔐</Text>
+          </View>
+          
+          <Text style={styles.title}>Enter Verification Code</Text>
+          <Text style={styles.subtitle}>
+            Enter the 6-digit code from your email
+          </Text>
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
@@ -89,48 +96,26 @@ export default function SignUpScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>Verification Code</Text>
               <Controller
                 control={control}
-                name="password"
+                name="token"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, errors.password && styles.inputError]}
-                    placeholder="Enter your password"
+                    style={[styles.input, errors.token && styles.inputError]}
+                    placeholder="123456"
                     placeholderTextColor="#666"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    secureTextEntry
-                    autoComplete="new-password"
+                    keyboardType="number-pad"
+                    autoComplete="one-time-code"
+                    maxLength={6}
                   />
                 )}
               />
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password.message}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.confirmPassword && styles.inputError]}
-                    placeholder="Confirm your password"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry
-                    autoComplete="new-password"
-                  />
-                )}
-              />
-              {errors.confirmPassword && (
-                <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+              {errors.token && (
+                <Text style={styles.errorText}>{errors.token.message}</Text>
               )}
             </View>
 
@@ -139,28 +124,40 @@ export default function SignUpScreen() {
             )}
 
             <TouchableOpacity
-              style={[styles.button, (!isValid || loading) && styles.buttonDisabled]}
+              style={[styles.button, (!isValid || otpVerificationLoading) && styles.buttonDisabled]}
               onPress={handleSubmit(onSubmit)}
-              disabled={!isValid || loading}
+              disabled={!isValid || otpVerificationLoading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Creating Account...' : 'Sign Up'}
+                {otpVerificationLoading ? 'Verifying...' : 'Verify Code'}
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Already have an account?{' '}
-                <Link href="/(auth)/sign-in" style={styles.link}>
-                  Sign In
-                </Link>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleBackToSignIn}
+            >
+              <Text style={styles.backButtonText}>
+                Back to Sign In
               </Text>
-            </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.help}>
+            <Text style={styles.helpTitle}>Need help?</Text>
+            <Text style={styles.helpText}>
+              • Check your email for a 6-digit code
+            </Text>
+            <Text style={styles.helpText}>
+              • The code expires in 60 minutes
+            </Text>
+            <Text style={styles.helpText}>
+              • Make sure to check your spam folder
+            </Text>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
-    </SafeAreaView>
   );
 }
 
@@ -176,21 +173,32 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
+    maxWidth: 400,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  iconContainer: {
+    marginBottom: 30,
+  },
+  icon: {
+    fontSize: 48,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#999',
     marginBottom: 40,
+    textAlign: 'center',
   },
   form: {
     width: '100%',
-    maxWidth: 400,
+    marginBottom: 30,
   },
   inputContainer: {
     marginBottom: 20,
@@ -224,6 +232,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 16,
   },
   buttonDisabled: {
     backgroundColor: '#666',
@@ -233,16 +242,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#25292e',
   },
-  footer: {
+  backButton: {
     alignItems: 'center',
-    marginTop: 30,
+    padding: 12,
   },
-  footerText: {
-    fontSize: 16,
+  backButtonText: {
+    fontSize: 14,
     color: '#999',
-  },
-  link: {
-    color: '#ffd33d',
     fontWeight: '500',
+  },
+  help: {
+    width: '100%',
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 16,
+  },
+  helpTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffd33d',
+    marginBottom: 8,
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#999',
+    marginBottom: 4,
+    lineHeight: 18,
   },
 });

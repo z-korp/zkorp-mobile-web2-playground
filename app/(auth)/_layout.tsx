@@ -17,6 +17,13 @@ export default function AuthLayout() {
         }}
       >
         <Stack.Screen 
+          name="index" 
+          options={{ 
+            title: 'Welcome',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
           name="sign-in" 
           options={{ 
             title: 'Sign In',
@@ -27,6 +34,20 @@ export default function AuthLayout() {
           name="sign-up" 
           options={{ 
             title: 'Sign Up',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="magic-link-sent" 
+          options={{ 
+            title: 'Check Your Email',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="verify-otp" 
+          options={{ 
+            title: 'Verify Code',
             headerShown: false,
           }} 
         />

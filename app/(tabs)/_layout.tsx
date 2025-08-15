@@ -10,17 +10,11 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: '#ffd33d',
         tabBarInactiveTintColor: '#9CA3AF',
-        headerStyle: {
-          backgroundColor: '#25292e',
-        },
-        headerShadowVisible: false,
-        headerTintColor: '#fff',
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: '#25292e',
           borderTopWidth: 1,
           borderTopColor: '#333',
-          height: 60,
-          paddingBottom: 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -76,7 +70,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: session ? 'Profile' : 'Login',
+          title: session ? 'Profile' : 'Sign In',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}

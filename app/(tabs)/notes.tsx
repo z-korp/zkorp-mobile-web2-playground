@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -261,7 +262,7 @@ function NotesContent() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={filteredNotes}
         renderItem={renderNote}
@@ -338,7 +339,7 @@ function NotesContent() {
                 )}
               />
               {errors.title && (
-                <Text style={styles.errorText}>{errors.title.message}</Text>
+                <Text style={styles.formErrorText}>{errors.title.message}</Text>
               )}
             </View>
 
@@ -360,13 +361,13 @@ function NotesContent() {
                 )}
               />
               {errors.content && (
-                <Text style={styles.errorText}>{errors.content.message}</Text>
+                <Text style={styles.formErrorText}>{errors.content.message}</Text>
               )}
             </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -623,7 +624,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ff4444',
   },
-  errorText: {
+  formErrorText: {
     color: '#ff4444',
     fontSize: 14,
     marginTop: 8,
