@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "zkorp-mobile-web2-playground",
-    "slug": "zkorp-mobile-web2-playground",
+    "slug": "zkorp-web2-playground",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -33,10 +33,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7f145611-219f-4773-a95b-8a288fd50db7"
+      }
     }
   }
 }
