@@ -1,9 +1,12 @@
 {
   "name": "zkorp-mobile-web2-playground",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "storybook": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --clear",
+    "storybook:ios": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --ios",
+    "storybook:android": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --android",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -13,6 +16,7 @@
     "build-eas:ios": "eas build -p ios --profile development",
     "build-eas:ios-simulator": "eas build -p ios --profile development-simulator",
     "build-local:ios": "npx expo run:ios"
+    "storybook-generate": "sb-rn-get-stories"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -57,9 +61,19 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-class-static-block": "^7.27.1",
+    "@gorhom/bottom-sheet": "^5.1.8",
+    "@react-native-community/datetimepicker": "^8.4.3",
+    "@react-native-community/slider": "^4.5.7",
+    "@storybook/addon-ondevice-actions": "^8.6.4",
+    "@storybook/addon-ondevice-controls": "^8.6.4",
+    "@storybook/react-native": "^8.6.4",
     "@types/react": "~19.0.10",
+    "babel-loader": "^8.4.1",
+    "cross-env": "^10.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "react-native-svg": "^15.12.1",
     "typescript": "~5.8.3"
   },
   "private": true
